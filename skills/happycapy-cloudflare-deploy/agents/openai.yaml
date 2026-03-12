@@ -1,0 +1,4 @@
+interface:
+  display_name: "Happycapy Cloudflare Deploy"
+  short_description: "Deploy Happycapy apps via Workers for Platforms"
+  default_prompt: "Use $happycapy-cloudflare-deploy to deploy this Happycapy project through Cloudflare Workers for Platforms, only ask me for Account ID and API Token, and return the final public URL."
