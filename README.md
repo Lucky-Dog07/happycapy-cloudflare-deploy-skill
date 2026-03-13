@@ -141,3 +141,86 @@ Skill 目录使用：
 - Wrangler
 
 如果项目已经接近这个脚手架，Skill 会尽量自动补齐并完成部署。
+
+## 带数据库的公网部署流程（新增）
+
+上面的流程适合“先生成应用，再直接部署”的场景。如果项目已经加入数据库，这个 Skill 也可以继续使用，不需要推翻原来的 Cloudflare 公网部署方式。
+
+新增后的思路是：
+
+1. 先让 Happycapy 生成带数据库的全栈应用
+2. 确认表结构、接口和数据模型已经齐全
+3. 再调用同一个 Skill，把数据层改造成 Cloudflare D1 持久化并部署到公网
+4. 最终返回的仍然是稳定的 Cloudflare 公网 URL
+
+### 1. 先生成带数据库的全栈应用
+
+![用 Happycapy 生成带数据库的全栈应用](docs/images/7.png)
+
+这里的关键点是，在生成应用时就明确提出“要有数据库，并设计好合适的表”。这样 Skill 后续在规范化项目时，就可以直接把现有数据模型迁移到 Cloudflare 的持久化方案里，而不是只部署一个无状态演示版。
+
+### 2. 让 Happycapy 先把数据库结构设计出来
+
+![Happycapy 设计数据库表结构](docs/images/9.png)
+
+从这个示例可以看到，Happycapy 先产出了完整的业务表结构，例如：
+
+- `users`
+- `addresses`
+- `merchants`
+- `products`
+- `cart_items`
+- `orders`
+- `order_items`
+- `reviews`
+- `favorites`
+
+这一步的意义是先把业务库设计清楚，后续再由 Skill 负责把本地或临时存储改造成 Cloudflare D1 绑定。
+
+### 3. 再调用 Skill 做数据库版公网部署
+
+![让 Happycapy 调用 skill 进行公网部署](docs/images/10.png)
+
+这一步和上面的基础版流程一样，仍然使用同一个 Skill：
+
+- `skills/happycapy-cloudflare-deploy`
+
+推荐调用思路可以改成下面这种数据库版提示词：
+
+```text
+使用 $happycapy-cloudflare-deploy 检查当前项目并自动规范化到可部署状态。
+这个项目已经包含数据库设计，请保留现有业务表结构，并把数据层改造成 Cloudflare D1 持久化。
+部署目标仍然是 Cloudflare Workers for Platforms。
+整个流程只向我索取 CLOUDFLARE_ACCOUNT_ID 和 CLOUDFLARE_API_TOKEN。
+不要把密钥写进任何项目文件，最后返回一个公网可访问的 URL。
+```
+
+### 4. 数据库版部署后的结果
+
+![数据库版部署结果](docs/images/8.png)
+
+数据库版流程跑通后，和原来的最大区别在于“应用已经不是临时内存态”。
+
+典型变化包括：
+
+- 数据存储从内存 JSON 或临时 SQLite，切换为 Cloudflare D1 持久化
+- 购物车不再因为 Worker 冷启动或重新部署而清空
+- 订单数据可以持续保存
+- 用户地址可以真正新增和长期保存
+- 公网入口 URL 的访问方式不变，仍然由 Dispatcher 暴露出来
+
+从这个示例里还能看到一类常见的新增或修改文件：
+
+- `schema.sql`：D1 建表脚本
+- `seed.sql`：初始化种子数据
+- `src/worker.ts`：把 API 改成基于 D1 的查询和写入
+- `wrangler.user.jsonc`：增加 D1 数据库绑定配置
+
+也就是说，这个 Skill 的数据库版能力本质上是：
+
+1. 保留你已经生成好的前端页面和业务流程
+2. 保留已有的表结构和 API 设计
+3. 把数据层规范化到 Cloudflare D1
+4. 继续沿用原来的 Workers for Platforms 公网部署路径
+
+这样处理以后，最终拿到的依然是一个所有人都能访问的公网地址，但应用状态已经从“演示态”升级成“可持久化访问”的数据库版。

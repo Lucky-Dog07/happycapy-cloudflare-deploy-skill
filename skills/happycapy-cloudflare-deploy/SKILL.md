@@ -88,3 +88,19 @@ Return all of the following:
 - Scaffold contract: [`references/scaffold-contract.md`](./references/scaffold-contract.md)
 - Deploy procedure: [`references/deploy-workflow.md`](./references/deploy-workflow.md)
 - Security and product rationale: [`references/security-and-rationale.md`](./references/security-and-rationale.md)
+
+## Database-Backed Variant
+
+When the Happycapy app already includes a database schema, keep the existing deploy path and layer persistence on top instead of replacing the whole architecture.
+
+Use these extra rules:
+- Preserve the existing business tables and API shape when they are already coherent.
+- Prefer Cloudflare D1 as the persistence target for data that must survive Worker restarts.
+- Treat local SQLite, JSON seed data, or in-memory mock storage as migration inputs, not as the final production persistence layer.
+- Add the minimum required D1 pieces such as schema files, seed files, Worker queries, and Wrangler D1 bindings.
+- Keep returning the same style of public Dispatcher URL after deployment; the database upgrade should not change the external access pattern.
+
+Typical examples include:
+- carts that must survive refreshes and cold starts
+- orders that must remain queryable after deployment
+- user addresses and profile data that need durable writes
