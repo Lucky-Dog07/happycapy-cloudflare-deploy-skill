@@ -103,6 +103,10 @@ Skill 目录使用：
 
 部署成功后，Skill 会返回一个可以直接在浏览器打开的 URL。这个 URL 面向公网，不依赖本地沙盒，因此可以被所有人访问。
 
+当前不带数据库的示例访问地址：
+
+- `https://xiaohongshu-clone.samdy-chen-bca.workers.dev`
+
 ## 为什么这个方法能公开访问
 
 原因很直接：
@@ -200,6 +204,10 @@ Skill 目录使用：
 ![数据库版部署结果](docs/images/8.png)
 
 数据库版流程跑通后，和原来的最大区别在于“应用已经不是临时内存态”。
+
+当前带数据库的示例访问地址：
+
+- `https://hc-meituan-dispatcher.samdy-chen-bca.workers.dev/hc-meituan-app/`
 
 典型变化包括：
 
